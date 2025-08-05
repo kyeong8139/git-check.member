@@ -9,11 +9,13 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.git_check.member.auth.exception.InvalidOAuth2ProviderException;
 import com.git_check.member.auth.repository.JPAOAuth2ClientRepository;
 import com.git_check.member.auth.repository.OAuth2ClientEntity;
 
+@Transactional
 public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClientService {
 
     private final ClientRegistrationRepository clientRegistrationRepository;
