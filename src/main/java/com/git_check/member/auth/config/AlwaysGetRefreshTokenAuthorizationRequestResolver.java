@@ -9,8 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Todo: 개발 완료 시 제거
+/***
+ * 로그인 시 항상 refresh token을 발급받도록 하는 클래스 (개발용)
  */
 public class AlwaysGetRefreshTokenAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
