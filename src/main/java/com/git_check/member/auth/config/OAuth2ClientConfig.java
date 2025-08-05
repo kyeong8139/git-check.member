@@ -24,6 +24,6 @@ public class OAuth2ClientConfig {
 
     @Bean
     public OAuth2AuthorizedClientService oAuth2AuthorizedClientService() {
-        return new HybridOAuth2ClientRepositoryService(jpaOAuth2ClientRepository, redisOAuth2TokenService, clientRegistrationRepository);
+        return new HybridOAuth2ClientRepositoryService(clientRegistrationRepository, redisOAuth2TokenService, jpaOAuth2ClientRepository);
     }
 }
