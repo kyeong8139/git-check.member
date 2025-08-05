@@ -8,7 +8,7 @@ import lombok.Data;
 import java.time.Instant;
 
 @Entity
-@Table(name = "oauth2_clients")
+@Table(name = "oauth2_client")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,6 +26,9 @@ public class OAuth2ClientEntity {
 
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
+
+    @Column(name = "refresh_token_issued_at")
+    private Long refreshTokenIssuedAt;
 
     @Column(name = "created_at")
     private Long createdAt;
