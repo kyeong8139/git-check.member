@@ -1,19 +1,19 @@
 package com.git_check.member.auth.repository;
 
 import jakarta.persistence.*;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import java.time.LocalDateTime;
+import lombok.Data;
+import java.time.Instant;
 
 @Entity
 @Table(name = "oauth2_clients")
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OAuth2Client {
+public class OAuth2ClientEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,26 +27,23 @@ public class OAuth2Client {
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
 
-    @Column(name = "scope")
-    private String scope;
-
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private Long createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Long updatedAt;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private Long deletedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = Instant.now().toEpochMilli();
+        updatedAt = Instant.now().toEpochMilli();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now().toEpochMilli();
     }
 }

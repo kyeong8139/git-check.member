@@ -1,73 +1,86 @@
 package com.git_check.member.auth.service;
 
+import java.time.Instant;
+
 import org.springframework.security.core.Authentication;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 
 import com.git_check.member.auth.repository.JPAOAuth2ClientRepository;
-import com.git_check.member.auth.repository.OAuth2Client;
+import com.git_check.member.auth.repository.OAuth2ClientEntity;
 
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-
-public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClientRepository {
+@Service
+public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClientService {
 
     private final JPAOAuth2ClientRepository jpaOAuth2ClientRepository;
+    private final ClientRegistrationRepository clientRegistrationRepository;
     private final RedisOAuth2TokenService redisOAuth2TokenService;
 
     public HybridOAuth2ClientRepositoryService(JPAOAuth2ClientRepository jpaOAuth2ClientRepository, 
-                                      RedisOAuth2TokenService redisOAuth2TokenService) {
+                                      RedisOAuth2TokenService redisOAuth2TokenService,
+                                      ClientRegistrationRepository clientRegistrationRepository) {
         this.jpaOAuth2ClientRepository = jpaOAuth2ClientRepository;
+        this.clientRegistrationRepository = clientRegistrationRepository;
         this.redisOAuth2TokenService = redisOAuth2TokenService;
     }
 
     @Override
-    public <T extends OAuth2AuthorizedClient> T loadAuthorizedClient(String clientRegistrationId, Authentication principal, HttpServletRequest request) {
-        String principalName = principal.getName();
-        
-        String accessToken = redisOAuth2TokenService.getAccessToken(clientRegistrationId, principalName);
-        
-        OAuth2Client jpaOAuth2Client = jpaOAuth2ClientRepository.findByProviderAndProviderId(clientRegistrationId, principalName);
+    public <T extends OAuth2AuthorizedClient> T loadAuthorizedClient(String clientRegistrationId, String principalName) {
+        ClientRegistration clientRegistration = clientRegistrationRepository.findByRegistrationId(clientRegistrationId);
+        if (clientRegistration == null) return null;
 
-        // TODO: Access Token과 Refresh Token을 조합하여 OAuth2AuthorizedClient 객체 생성
-        // 현재는 null 반환하지만, 실제로는 토큰들을 조합하여 OAuth2AuthorizedClient를 생성해야 함
+        OAuth2ClientEntity oAuth2Client = jpaOAuth2ClientRepository.findByProviderAndProviderId(clientRegistrationId, principalName);
+        if (oAuth2Client == null || oAuth2Client.getDeletedAt() != null) return null;
+        System.out.println(oAuth2Client.toString());
         
-        return null;
+        OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(oAuth2Client.getRefreshToken(), Instant.ofEpochMilli(oAuth2Client.getCreatedAt()));
+        
+        OAuth2AccessToken accessToken = redisOAuth2TokenService.getAccessToken(clientRegistrationId, principalName);
+        
+        T authorizedClient = (T) new OAuth2AuthorizedClient(clientRegistration, principalName, accessToken, refreshToken);
+        return authorizedClient;
     }
 
     @Override
-    public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal,
-            HttpServletRequest request, HttpServletResponse response) {
-        String provider = authorizedClient.getClientRegistration().getRegistrationId();
+    public void saveAuthorizedClient(OAuth2AuthorizedClient authorizedClient, Authentication principal) {
         String principalName = principal.getName();
+        String registrationId = authorizedClient.getClientRegistration().getRegistrationId();
+        OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
+        OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
         
-        if (authorizedClient.getAccessToken() != null) {
-            redisOAuth2TokenService.saveAccessToken(provider, principalName, 
-                authorizedClient.getAccessToken().getTokenValue());
-        }
+        if (accessToken == null) return;
         
-        OAuth2Client oAuth2Client = OAuth2Client.builder()
-                .provider(provider)
+        OAuth2ClientEntity oAuth2Client = jpaOAuth2ClientRepository.findByProviderAndProviderId(registrationId, principalName);
+        if (oAuth2Client == null) {
+            oAuth2Client = OAuth2ClientEntity.builder()
+                .provider(registrationId)
                 .providerId(principalName)
-                .refreshToken(authorizedClient.getRefreshToken().getTokenValue())
-                .scope(authorizedClient.getClientRegistration().getScopes().toString())
+                .refreshToken(refreshToken.getTokenValue())
+                .createdAt(Instant.now().toEpochMilli())
+                .updatedAt(Instant.now().toEpochMilli())
                 .build();
+        }
 
+        System.out.println(oAuth2Client.toString());
         jpaOAuth2ClientRepository.save(oAuth2Client);
+        redisOAuth2TokenService.saveAccessToken(registrationId, principalName, accessToken);
     }
 
     @Override
-    public void removeAuthorizedClient(String clientRegistrationId, Authentication principal,
-        HttpServletRequest request, HttpServletResponse response) {
-        String principalName = principal.getName();
-        
-        redisOAuth2TokenService.removeAccessToken(clientRegistrationId, principalName);
-        
-        OAuth2Client oAuth2Client = jpaOAuth2ClientRepository.findByProviderAndProviderId(clientRegistrationId, principalName);
-        if (oAuth2Client != null) {
-            jpaOAuth2ClientRepository.updateDeletedAt(oAuth2Client, LocalDateTime.now());
+    public void removeAuthorizedClient(String clientRegistrationId, String principalName) {
+        OAuth2ClientEntity oAuth2Client = jpaOAuth2ClientRepository.findByProviderAndProviderId(clientRegistrationId, principalName);
+        if (oAuth2Client == null) {
+            return;
         }
+
+        oAuth2Client.setDeletedAt(Instant.now().toEpochMilli());
+        jpaOAuth2ClientRepository.save(oAuth2Client);
+        redisOAuth2TokenService.removeAccessToken(clientRegistrationId, principalName);
     }
 }

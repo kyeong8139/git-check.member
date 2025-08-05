@@ -3,24 +3,25 @@ package com.git_check.member.auth.service;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import java.time.Duration;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 @Service
 public class RedisOAuth2TokenService {
 
-    private final RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, OAuth2AccessToken> redisTemplate;
     private static final String TOKEN_KEY_PREFIX = "oauth2:access_token:";
-    private static final Duration TOKEN_EXPIRY = Duration.ofHours(1); // 1시간
+    private static final Duration TOKEN_EXPIRY = Duration.ofHours(1);
 
-    public RedisOAuth2TokenService(RedisTemplate<String, String> redisTemplate) {
+    public RedisOAuth2TokenService(RedisTemplate<String, OAuth2AccessToken> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
-    public void saveAccessToken(String provider, String principalName, String accessToken) {
+    public void saveAccessToken(String provider, String principalName, OAuth2AccessToken accessToken) {
         String key = generateKey(provider, principalName);
         redisTemplate.opsForValue().set(key, accessToken, TOKEN_EXPIRY);
     }
 
-    public String getAccessToken(String provider, String principalName) {
+    public OAuth2AccessToken getAccessToken(String provider, String principalName) {
         String key = generateKey(provider, principalName);
         return redisTemplate.opsForValue().get(key);
     }
