@@ -14,11 +14,14 @@ public class SecurityConfig {
 
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final OAuth2AuthorizationRequestResolver authorizationRequestResolver;
+    private final OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserService;
     
     public SecurityConfig(OAuth2AuthorizedClientService oAuth2AuthorizedClientService, 
-                         OAuth2AuthorizationRequestResolver authorizationRequestResolver) {
+                         OAuth2AuthorizationRequestResolver authorizationRequestResolver,
+                         OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserService) {
         this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
         this.authorizationRequestResolver = authorizationRequestResolver;
+        this.oAuth2UserService = oAuth2UserService;
     }
 
     @Bean
@@ -32,12 +35,9 @@ public class SecurityConfig {
             .authorizedClientService(this.oAuth2AuthorizedClientService)
             .authorizationEndpoint(authorization -> authorization
                 .authorizationRequestResolver(authorizationRequestResolver))
-            // Todo : CustomOAuth2UserService에 회원가입/로그인 비즈니스 로직 구현 후 활성화
-            // .userInfoEndpoint(userInfo -> userInfo.userService(new CustomOAuth2UserService()))
+            .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
         );
 
         return http.build();
     }
-
-
 }
