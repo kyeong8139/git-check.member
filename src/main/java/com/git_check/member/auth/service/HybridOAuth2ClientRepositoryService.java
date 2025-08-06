@@ -79,8 +79,9 @@ public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClie
             return;
         }
 
-        oAuth2Client.setUpdatedAt(Instant.now().toEpochMilli());
+        oAuth2Client.setRefreshToken(null);
         oAuth2Client.setDeletedAt(Instant.now().toEpochMilli());
+        oAuth2Client.setUpdatedAt(Instant.now().toEpochMilli());
         jpaOAuth2ClientRepository.save(oAuth2Client);
         redisOAuth2TokenService.removeAccessToken(clientRegistrationId, principalName);
     }
