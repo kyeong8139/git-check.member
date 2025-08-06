@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemberInfo {
+    long id;
+    String name;
     String socialLoginType;
     String socialLoginId;
 }
