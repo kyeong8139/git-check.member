@@ -9,9 +9,10 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;    
 
 @Configuration
 @EnableWebSecurity
@@ -19,14 +20,20 @@ public class SecurityConfig {
 
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final OAuth2AuthorizationRequestResolver authorizationRequestResolver;
-    private final OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserService;
+    private final OidcUserService oidcUserService;
+    private final AuthenticationSuccessHandler authenticationSuccessHandler;
+    private final AuthenticationFailureHandler authenticationFailureHandler;
     
     public SecurityConfig(OAuth2AuthorizedClientService oAuth2AuthorizedClientService, 
                          OAuth2AuthorizationRequestResolver authorizationRequestResolver,
-                         OAuth2UserService<OidcUserRequest, OidcUser> oAuth2UserService) {
+                         OidcUserService oidcUserService,
+                         AuthenticationSuccessHandler authenticationSuccessHandler,
+                         AuthenticationFailureHandler authenticationFailureHandler) {
         this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
         this.authorizationRequestResolver = authorizationRequestResolver;
-        this.oAuth2UserService = oAuth2UserService;
+        this.oidcUserService = oidcUserService;
+        this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.authenticationFailureHandler = authenticationFailureHandler;
     }
 
     @Bean
@@ -40,7 +47,9 @@ public class SecurityConfig {
             .authorizedClientService(this.oAuth2AuthorizedClientService)
             .authorizationEndpoint(authorization -> authorization
                 .authorizationRequestResolver(authorizationRequestResolver))
-            .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oAuth2UserService))
+            .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oidcUserService))
+            .successHandler(authenticationSuccessHandler)
+            .failureHandler(authenticationFailureHandler)
         );
 
         return http.build();

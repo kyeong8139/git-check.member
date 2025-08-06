@@ -6,7 +6,6 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -15,8 +14,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, OAuth2AccessToken> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, OAuth2AccessToken> template = new RedisTemplate<>();
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         
         ObjectMapper objectMapper = new ObjectMapper();

@@ -9,22 +9,25 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.git_check.member.auth.exception.InvalidOAuth2ProviderException;
 import com.git_check.member.auth.repository.JPAOAuth2ClientRepository;
 import com.git_check.member.auth.repository.OAuth2ClientEntity;
 
+@Service
 @Transactional
-public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClientService {
+public class HybridAuthorizedClientService implements OAuth2AuthorizedClientService {
 
     private final ClientRegistrationRepository clientRegistrationRepository;
-    private final RedisOAuth2TokenService redisOAuth2TokenService;
+    private final RedisService redisService;
     private final JPAOAuth2ClientRepository jpaOAuth2ClientRepository;
+    private final String REDIS_KEY_PREFIX = "oauth2:access_token:";
 
-    public HybridOAuth2ClientRepositoryService(ClientRegistrationRepository clientRegistrationRepository, RedisOAuth2TokenService redisOAuth2TokenService, JPAOAuth2ClientRepository jpaOAuth2ClientRepository) {
+    public HybridAuthorizedClientService(ClientRegistrationRepository clientRegistrationRepository, RedisService redisService, JPAOAuth2ClientRepository jpaOAuth2ClientRepository) {
         this.clientRegistrationRepository = clientRegistrationRepository;   
-        this.redisOAuth2TokenService = redisOAuth2TokenService;
+        this.redisService = redisService;
         this.jpaOAuth2ClientRepository = jpaOAuth2ClientRepository;
     }
 
@@ -40,8 +43,9 @@ public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClie
             return null;
         }
         
+        String redisKey = generateRedisKey(clientRegistrationId, principalName);
+        OAuth2AccessToken accessToken = (OAuth2AccessToken) redisService.getFromRedis(redisKey);
         OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(oAuth2Client.getRefreshToken(), Instant.ofEpochMilli(oAuth2Client.getCreatedAt()));
-        OAuth2AccessToken accessToken = redisOAuth2TokenService.getAccessToken(clientRegistrationId, principalName);
         return (T) new OAuth2AuthorizedClient(clientRegistration, principalName, accessToken, refreshToken);
     }
 
@@ -69,7 +73,7 @@ public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClie
         }
 
         jpaOAuth2ClientRepository.save(oAuth2Client);
-        redisOAuth2TokenService.saveAccessToken(registrationId, principalName, accessToken);
+        redisService.saveToRedis(generateRedisKey(registrationId, principalName), accessToken, accessToken.getExpiresAt().toEpochMilli());
     }
 
     @Override
@@ -83,6 +87,10 @@ public class HybridOAuth2ClientRepositoryService implements OAuth2AuthorizedClie
         oAuth2Client.setDeletedAt(Instant.now().toEpochMilli());
         oAuth2Client.setUpdatedAt(Instant.now().toEpochMilli());
         jpaOAuth2ClientRepository.save(oAuth2Client);
-        redisOAuth2TokenService.removeAccessToken(clientRegistrationId, principalName);
+        redisService.removeFromRedis(generateRedisKey(clientRegistrationId, principalName));
+    }
+
+    private String generateRedisKey(String clientRegistrationId, String principalName) {
+        return REDIS_KEY_PREFIX + clientRegistrationId + ":" + principalName;
     }
 }
