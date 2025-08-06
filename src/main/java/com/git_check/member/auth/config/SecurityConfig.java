@@ -7,6 +7,11 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Configuration
 @EnableWebSecurity
@@ -35,7 +40,7 @@ public class SecurityConfig {
             .authorizedClientService(this.oAuth2AuthorizedClientService)
             .authorizationEndpoint(authorization -> authorization
                 .authorizationRequestResolver(authorizationRequestResolver))
-            .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService))
+            .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oAuth2UserService))
         );
 
         return http.build();
