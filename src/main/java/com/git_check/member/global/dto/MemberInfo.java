@@ -1,5 +1,15 @@
-package com.git_check.member.member;
+package com.git_check.member.global.dto;
 
-public class Member {
-    
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class MemberInfo {
+    String socialLoginType;
+    String socialLoginId;
 }
