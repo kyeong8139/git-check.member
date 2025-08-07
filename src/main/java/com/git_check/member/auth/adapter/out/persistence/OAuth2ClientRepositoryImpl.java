@@ -28,17 +28,7 @@ public class OAuth2ClientRepositoryImpl implements OAuth2ClientPort {
     }
 
     @Override
-    public void update(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
-        oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
-    }
-
-    @Override
-    public void delete(long id) {
-        OAuth2ClientUpdate oAuth2ClientUpdate = OAuth2ClientUpdate.builder()
-            .refreshToken(null)
-            .refreshTokenIssuedAt(null)
-            .deletedAt(System.currentTimeMillis())
-            .build();
+    public void updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
         oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
     }
 }

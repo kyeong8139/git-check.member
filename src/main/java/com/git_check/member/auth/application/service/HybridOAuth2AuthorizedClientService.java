@@ -74,7 +74,7 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
                 .refreshTokenIssuedAt(refreshToken.getIssuedAt().toEpochMilli())
                 .deletedAt(null)
                 .build();
-            oAuth2ClientPort.update(oAuth2Client.getId(), oAuth2ClientUpdata);
+            oAuth2ClientPort.updateState(oAuth2Client.getId(), oAuth2ClientUpdata);
         }
 
         cachePort.save(generateRedisKey(registrationId, principalName), accessToken, accessToken.getExpiresAt().toEpochMilli());
@@ -87,7 +87,12 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
             return;
         }
 
-        oAuth2ClientPort.delete(oAuth2Client.getId());
+        OAuth2ClientUpdate oAuth2ClientUpdate = OAuth2ClientUpdate.builder()
+            .refreshToken(null)
+            .refreshTokenIssuedAt(null)
+            .deletedAt(System.currentTimeMillis())
+            .build();
+        oAuth2ClientPort.updateState(oAuth2Client.getId(), oAuth2ClientUpdate);
         cachePort.remove(generateRedisKey(clientRegistrationId, principalName));
     }
 

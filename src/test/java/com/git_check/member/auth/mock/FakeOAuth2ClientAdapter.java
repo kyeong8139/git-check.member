@@ -12,11 +12,6 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
 
     private Map<Long, OAuth2Client> oAuth2ClientRepository = new HashMap<>();
     private long id = 0;
-    private long currentTimeMillis;
-
-    public FakeOAuth2ClientAdapter(long currentTimeMillis) {
-        this.currentTimeMillis = currentTimeMillis;
-    }
 
     @Override
     public OAuth2Client findByProviderAndProviderId(String provider, String providerId) {
@@ -40,7 +35,7 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
     }
 
     @Override
-    public void update(long id, OAuth2ClientUpdate oAuth2ClientUpdata) {
+    public void updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdata) {
         OAuth2Client oAuth2Client = oAuth2ClientRepository.get(id);
         OAuth2Client updatedClient = OAuth2Client.builder()
             .id(oAuth2Client.getId())
@@ -51,15 +46,5 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
             .deletedAt(oAuth2ClientUpdata.getDeletedAt())
             .build();
         oAuth2ClientRepository.put(id, updatedClient);
-    }
-
-    @Override
-    public void delete(long id) {
-        OAuth2ClientUpdate oAuth2ClientUpdate = OAuth2ClientUpdate.builder()
-            .refreshToken(null)
-            .refreshTokenIssuedAt(null)
-            .deletedAt(currentTimeMillis)
-            .build();
-        this.update(id, oAuth2ClientUpdate);
     }
 }
