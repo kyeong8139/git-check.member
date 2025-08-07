@@ -1,4 +1,4 @@
-package com.git_check.member.auth.handler;
+package com.git_check.member.auth.adapter.config.handler;
 
 import java.io.IOException;
 
@@ -11,22 +11,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import com.git_check.member.auth.OidcPrincipalDetail;
-import com.git_check.member.auth.service.JwtService;
+import com.git_check.member.auth.application.domain.OidcPrincipal;
+import com.git_check.member.auth.application.port.in.ProvideJwtToken;
 
 @Component
 public class Odic2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final JwtService jwtService;
+    private final ProvideJwtToken jwtService;
 
-    public Odic2LoginSuccessHandler(JwtService jwtService) {
+    public Odic2LoginSuccessHandler(ProvideJwtToken jwtService) {
         this.jwtService = jwtService;
     }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
-        OidcPrincipalDetail oidcPrincipal = (OidcPrincipalDetail) authentication.getPrincipal();
+        OidcPrincipal oidcPrincipal = (OidcPrincipal) authentication.getPrincipal();
         String refreshToken = jwtService.createRefreshToken(oidcPrincipal);
                 
         response.setStatus(HttpStatus.OK.value());

@@ -1,4 +1,4 @@
-package com.git_check.member.auth.handler;
+package com.git_check.member.auth.adapter.config.handler;
 
 import java.io.IOException;
 

@@ -1,30 +1,32 @@
-package com.git_check.member.auth.service;
+package com.git_check.member.auth.adapter.out.cache;
 
 import java.time.Duration;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import com.git_check.member.auth.application.port.out.LoadToken;
+
 @Service
-public class RedisServiceImpl implements RedisService {
+public class RedisTokenRepository implements LoadToken {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    public RedisServiceImpl(RedisTemplate<String, Object> redisTemplate) {
+    public RedisTokenRepository(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
     @Override
-    public void saveToRedis(String key, Object value, long expirationTimeMillis) {
+    public void save(String key, Object value, long expirationTimeMillis) {
         redisTemplate.opsForValue().set(key, value, Duration.ofMillis(expirationTimeMillis));
     }
 
     @Override
-    public Object getFromRedis(String key) {
+    public Object get(String key) {
         return redisTemplate.opsForValue().get(key);
     }
 
     @Override
-    public void removeFromRedis(String key) {
+    public void remove(String key) {
         redisTemplate.delete(key);
     }
 
