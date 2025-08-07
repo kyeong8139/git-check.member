@@ -1,4 +1,4 @@
-package com.git_check.member.auth.exception;
+package com.git_check.member.auth.adapter.config.exception;
 
 import org.springframework.http.HttpStatus;
 

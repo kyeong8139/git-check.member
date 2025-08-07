@@ -1,4 +1,4 @@
-package com.git_check.member.auth;
+package com.git_check.member.auth.application.domain;
 
 import java.util.Collection;
 import java.util.Map;
@@ -10,10 +10,10 @@ import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 
 import com.git_check.member.global.dto.MemberInfo;
 
-public class OidcPrincipalDetail implements OidcUser{
+public class OidcPrincipal implements OidcUser{
     private final MemberInfo memberInfo;
     private final OidcUser oidcUser;
-    public OidcPrincipalDetail(MemberInfo memberInfo, OidcUser oidcUser) {
+    public OidcPrincipal(MemberInfo memberInfo, OidcUser oidcUser) {
         this.memberInfo = memberInfo;
         this.oidcUser = oidcUser;
     }
