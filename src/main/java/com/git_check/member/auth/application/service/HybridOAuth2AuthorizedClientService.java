@@ -18,7 +18,7 @@ import com.git_check.member.auth.application.domain.dto.OAuth2ClientCreate;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientDelete;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
 import com.git_check.member.auth.application.port.out.SaveOAuth2Client;
-import com.git_check.member.auth.application.port.out.LoadToken;
+import com.git_check.member.auth.application.port.out.CachePort;
 
 @Service
 @Transactional
@@ -26,13 +26,13 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
 
     private final ClientRegistrationRepository clientRegistrationRepository;
     private final SaveOAuth2Client oAuth2ClientRepository;
-    private final LoadToken tokenRepository;  
+    private final CachePort cachePort;  
     private final String REDIS_KEY_PREFIX = "oauth2:access_token:";
 
-    public HybridOAuth2AuthorizedClientService(ClientRegistrationRepository clientRegistrationRepository, LoadToken tokenRepository, SaveOAuth2Client oAuth2ClientRepository) {
+    public HybridOAuth2AuthorizedClientService(ClientRegistrationRepository clientRegistrationRepository, CachePort cachePort, SaveOAuth2Client oAuth2ClientRepository) {
         this.clientRegistrationRepository = clientRegistrationRepository;   
         this.oAuth2ClientRepository = oAuth2ClientRepository;
-        this.tokenRepository = tokenRepository;
+        this.cachePort = cachePort;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
         }
         
         String redisKey = generateRedisKey(clientRegistrationId, principalName);
-        OAuth2AccessToken accessToken = (OAuth2AccessToken) tokenRepository.get(redisKey);
+        OAuth2AccessToken accessToken = (OAuth2AccessToken) cachePort.get(redisKey);
         OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(oAuth2Client.getRefreshToken(), Instant.ofEpochMilli(oAuth2Client.getCreatedAt()));
         return (T) new OAuth2AuthorizedClient(clientRegistration, principalName, accessToken, refreshToken);
     }
@@ -78,7 +78,7 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
             oAuth2ClientRepository.update(oAuth2ClientUpdata);
         }
 
-        tokenRepository.save(generateRedisKey(registrationId, principalName), accessToken, accessToken.getExpiresAt().toEpochMilli());
+        cachePort.save(generateRedisKey(registrationId, principalName), accessToken, accessToken.getExpiresAt().toEpochMilli());
     }
 
     @Override
@@ -94,7 +94,7 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
             .deletedAt(Instant.now().toEpochMilli())
             .build();
         oAuth2ClientRepository.delete(oAuth2ClientDelete);
-        tokenRepository.remove(generateRedisKey(clientRegistrationId, principalName));
+        cachePort.remove(generateRedisKey(clientRegistrationId, principalName));
     }
 
     private String generateRedisKey(String clientRegistrationId, String principalName) {
