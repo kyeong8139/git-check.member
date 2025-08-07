@@ -19,6 +19,8 @@ import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
 import com.git_check.member.auth.application.port.out.OAuth2ClientPort;
 import com.git_check.member.auth.application.port.out.CachePort;
 
+import lombok.Builder;
+
 @Service
 @Transactional
 public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClientService {
@@ -28,6 +30,7 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
     private final CachePort cachePort;  
     private final String REDIS_KEY_PREFIX = "oauth2:access_token:";
 
+    @Builder
     public HybridOAuth2AuthorizedClientService(ClientRegistrationRepository clientRegistrationRepository, CachePort cachePort, OAuth2ClientPort oAuth2ClientPort) {
         this.clientRegistrationRepository = clientRegistrationRepository;   
         this.oAuth2ClientPort = oAuth2ClientPort;
