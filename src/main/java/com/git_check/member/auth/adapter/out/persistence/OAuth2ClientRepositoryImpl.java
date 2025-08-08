@@ -16,8 +16,8 @@ public class OAuth2ClientRepositoryImpl implements OAuth2ClientPort {
     }
     
     @Override
-    public OAuth2Client findByProviderAndProviderId(String provider, String providerId) {
-        return oAuth2ClientJPARepository.findByProviderAndProviderId(provider, providerId)
+    public OAuth2Client findByProviderAndPrincipalName(String provider, String principalName) {
+        return oAuth2ClientJPARepository.findByProviderAndPrincipalName(provider, principalName)
             .map(OAuth2ClientEntity::toModel)
             .orElse(null);
     }

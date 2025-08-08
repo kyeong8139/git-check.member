@@ -12,7 +12,7 @@ import lombok.AllArgsConstructor;
 public class OAuth2Client {
     private Long id;
     private String provider;
-    private String providerId;
+    private String principalName;
 
     private String refreshToken;
     private Long refreshTokenIssuedAt;

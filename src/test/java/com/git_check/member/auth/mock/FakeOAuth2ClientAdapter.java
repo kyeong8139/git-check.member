@@ -14,7 +14,7 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
     private long id = 0;
 
     @Override
-    public OAuth2Client findByProviderAndProviderId(String provider, String providerId) {
+    public OAuth2Client findByProviderAndPrincipalName(String provider, String providerId) {
         for (OAuth2Client oAuth2Client : oAuth2ClientRepository.values()) {
             if (oAuth2Client.getProvider().equals(provider) && oAuth2Client.getProviderId().equals(providerId)) {
                 return oAuth2Client;

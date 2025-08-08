@@ -11,7 +11,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class OAuth2ClientCreate {
     private String provider;
-    private String providerId;
+    private String principalName;
 
     private String refreshToken;
     private Long refreshTokenIssuedAt;

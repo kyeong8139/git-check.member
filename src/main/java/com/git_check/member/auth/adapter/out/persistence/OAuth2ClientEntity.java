@@ -32,8 +32,8 @@ public class OAuth2ClientEntity {
     @Column(name = "provider", nullable = false)
     private String provider;
 
-    @Column(name = "provider_id", nullable = false)
-    private String providerId;
+    @Column(name = "principal_name", nullable = false)
+    private String principalName;
 
     @Column(name = "refresh_token", columnDefinition = "TEXT")
     private String refreshToken;
@@ -64,7 +64,7 @@ public class OAuth2ClientEntity {
     public static OAuth2ClientEntity from(OAuth2ClientCreate oAuth2ClientCreate) {
         OAuth2ClientEntity oAuth2ClientEntity = new OAuth2ClientEntity();
         oAuth2ClientEntity.setProvider(oAuth2ClientCreate.getProvider());
-        oAuth2ClientEntity.setProviderId(oAuth2ClientCreate.getProviderId());
+        oAuth2ClientEntity.setPrincipalName(oAuth2ClientCreate.getPrincipalName());
         oAuth2ClientEntity.setRefreshToken(oAuth2ClientCreate.getRefreshToken());
         oAuth2ClientEntity.setRefreshTokenIssuedAt(oAuth2ClientCreate.getRefreshTokenIssuedAt());
         return oAuth2ClientEntity;
@@ -82,7 +82,7 @@ public class OAuth2ClientEntity {
         return OAuth2Client.builder()
             .id(id)
             .provider(provider)
-            .providerId(providerId)
+            .principalName(principalName)
             .refreshToken(refreshToken)
             .refreshTokenIssuedAt(refreshTokenIssuedAt)
             .createdAt(createdAt)
