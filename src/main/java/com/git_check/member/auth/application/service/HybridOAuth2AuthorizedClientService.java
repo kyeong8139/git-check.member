@@ -1,9 +1,6 @@
 package com.git_check.member.auth.application.service;
 
-import java.time.Instant;
-
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -53,8 +50,11 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
         
         String redisKey = generateRedisKey(clientRegistrationId, principalName);
         OAuth2AccessToken accessToken = (OAuth2AccessToken) cachePort.get(redisKey);
+        if (accessToken == null) {
+            accessToken = oAuth2ClientPort.findLastAccessTokenByProviderAndPrincipalName(oAuth2Client.getId());
+        }
 
-        OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(oAuth2Client.getRefreshToken(), Instant.ofEpochMilli(oAuth2Client.getRefreshTokenIssuedAt()));
+        OAuth2RefreshToken refreshToken = oAuth2Client.getRefreshToken();
         return (T) new OAuth2AuthorizedClient(clientRegistration, principalName, accessToken, refreshToken);
     }
 
@@ -70,20 +70,20 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
             OAuth2ClientCreate oAuth2ClientCreate = OAuth2ClientCreate.builder()
                 .provider(registrationId)
                 .principalName(principalName)
-                .refreshToken(refreshToken.getTokenValue())
-                .refreshTokenIssuedAt(refreshToken.getIssuedAt().toEpochMilli())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
             oAuth2ClientPort.create(oAuth2ClientCreate);
         } else if (refreshToken != null) {
             OAuth2ClientUpdate oAuth2ClientUpdata = OAuth2ClientUpdate.builder()
-                .refreshToken(refreshToken.getTokenValue())
-                .refreshTokenIssuedAt(refreshToken.getIssuedAt().toEpochMilli())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .deletedAt(null)
                 .build();
             oAuth2ClientPort.updateState(oAuth2Client.getId(), oAuth2ClientUpdata);
         }
 
-        cachePort.save(generateRedisKey(registrationId, principalName), accessToken);
+        cachePort.save(generateRedisKey(registrationId, principalName), accessToken, accessToken.getExpiresAt().toEpochMilli());
     }
 
     @Override
@@ -94,8 +94,8 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
         }
 
         OAuth2ClientUpdate oAuth2ClientUpdate = OAuth2ClientUpdate.builder()
+            .accessToken(null)
             .refreshToken(null)
-            .refreshTokenIssuedAt(null)
             .deletedAt(System.currentTimeMillis())
             .build();
         oAuth2ClientPort.updateState(oAuth2Client.getId(), oAuth2ClientUpdate);

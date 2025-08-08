@@ -15,6 +15,11 @@ public class FakeCacheAdapter implements CachePort {
     }
 
     @Override
+    public void save(String key, Object value) {
+        this.save(key, value, Long.MAX_VALUE);
+    }
+
+    @Override
     public void save(String key, Object value, long expirationTimeMillis) {
         if (expirationTimeMillis <= currentTimeMills) return;
         MockCacheEntry mockCacheEntry = MockCacheEntry.builder()

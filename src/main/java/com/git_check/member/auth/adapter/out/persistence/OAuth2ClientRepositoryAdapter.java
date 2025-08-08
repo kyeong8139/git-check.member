@@ -1,18 +1,21 @@
 package com.git_check.member.auth.adapter.out.persistence;
 
-import org.springframework.stereotype.Repository;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.stereotype.Component;
 
 import com.git_check.member.auth.application.domain.OAuth2Client;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientCreate;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
 import com.git_check.member.auth.application.port.out.OAuth2ClientPort;
 
-@Repository
-public class OAuth2ClientRepositoryImpl implements OAuth2ClientPort {
+@Component
+public class OAuth2ClientRepositoryAdapter implements OAuth2ClientPort {
     private final OAuth2ClientJPARepository oAuth2ClientJPARepository;
+    private final ClientAccessTokenHistoryJPARepository clientAccessTokenHistoryJPARepository;
 
-    public OAuth2ClientRepositoryImpl(OAuth2ClientJPARepository oAuth2ClientJPARepository) {
+    public OAuth2ClientRepositoryAdapter(OAuth2ClientJPARepository oAuth2ClientJPARepository, ClientAccessTokenHistoryJPARepository clientAccessTokenHistoryJPARepository) {
         this.oAuth2ClientJPARepository = oAuth2ClientJPARepository;
+        this.clientAccessTokenHistoryJPARepository = clientAccessTokenHistoryJPARepository;
     }
     
     @Override
@@ -25,12 +28,21 @@ public class OAuth2ClientRepositoryImpl implements OAuth2ClientPort {
     @Override
     public OAuth2Client create(OAuth2ClientCreate oAuth2ClientCreate) {
         OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientCreate));
+        clientAccessTokenHistoryJPARepository.save(ClientAccessTokenEntity.from(oAuth2ClientCreate.getAccessToken(), oAuth2ClientEntity));
         return oAuth2ClientEntity.toModel();
     }
 
     @Override
     public OAuth2Client updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
         OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
+        clientAccessTokenHistoryJPARepository.save(ClientAccessTokenEntity.from(oAuth2ClientUpdate.getAccessToken(), oAuth2ClientEntity));
         return oAuth2ClientEntity.toModel();
+    }
+
+    @Override
+    public OAuth2AccessToken findLastAccessTokenByProviderAndPrincipalName(long clientId) {
+        return clientAccessTokenHistoryJPARepository.findLastAccessTokenByClientId(clientId)
+            .map(ClientAccessTokenEntity::toModel)
+            .orElse(null);
     }
 }
