@@ -1,4 +1,4 @@
-package com.git_check.member.auth.service;
+package com.git_check.member.auth.service.HybridOAuth2AuthorizedClientService;
 
 import org.junit.jupiter.api.BeforeEach;
 
@@ -15,7 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class HybridOAuth2AuthorizedClientServiceTest {
+public class LoadAuthorizedClientTest {
     
     private HybridOAuth2AuthorizedClientService hybridOAuth2AuthorizedClientService;
     private FakeClientRegistrationAdapter fakeClientRegistrationAdapter;
