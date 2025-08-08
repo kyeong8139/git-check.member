@@ -24,18 +24,20 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
     }
 
     @Override
-    public void create(OAuth2ClientCreate oAuth2ClientCreate) {
+    public OAuth2Client create(OAuth2ClientCreate oAuth2ClientCreate) {
         OAuth2Client oAuth2Client = OAuth2Client.builder()
+            .id(id)
             .provider(oAuth2ClientCreate.getProvider())
             .providerId(oAuth2ClientCreate.getProviderId())
             .refreshToken(oAuth2ClientCreate.getRefreshToken())
             .refreshTokenIssuedAt(oAuth2ClientCreate.getRefreshTokenIssuedAt())
             .build();
-        oAuth2ClientRepository.put(id++, oAuth2Client);
+        oAuth2ClientRepository.put(id, oAuth2Client);
+        return oAuth2ClientRepository.get(id++);
     }
 
     @Override
-    public void updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdata) {
+    public OAuth2Client updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdata) {
         OAuth2Client oAuth2Client = oAuth2ClientRepository.get(id);
         OAuth2Client updatedClient = OAuth2Client.builder()
             .id(oAuth2Client.getId())
@@ -46,5 +48,19 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
             .deletedAt(oAuth2ClientUpdata.getDeletedAt())
             .build();
         oAuth2ClientRepository.put(id, updatedClient);
+        return oAuth2ClientRepository.get(id);
+    }
+
+    public OAuth2Client createSoftDeletedClient(String provider, String providerId) {
+        OAuth2Client oAuth2Client = OAuth2Client.builder()
+            .id(id)
+            .provider(provider)
+            .providerId(providerId)
+            .refreshToken(null)
+            .refreshTokenIssuedAt(null)
+            .deletedAt(System.currentTimeMillis())
+            .build();
+        oAuth2ClientRepository.put(id, oAuth2Client);
+        return oAuth2ClientRepository.get(id++);
     }
 }

@@ -23,12 +23,14 @@ public class OAuth2ClientRepositoryImpl implements OAuth2ClientPort {
     }
 
     @Override
-    public void create(OAuth2ClientCreate oAuth2ClientCreate) {
-        oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientCreate));
+    public OAuth2Client create(OAuth2ClientCreate oAuth2ClientCreate) {
+        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientCreate));
+        return oAuth2ClientEntity.toModel();
     }
 
     @Override
-    public void updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
-        oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
+    public OAuth2Client updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
+        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
+        return oAuth2ClientEntity.toModel();
     }
 }

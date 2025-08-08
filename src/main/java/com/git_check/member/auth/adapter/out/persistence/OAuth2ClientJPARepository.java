@@ -16,5 +16,5 @@ public interface OAuth2ClientJPARepository extends JpaRepository<OAuth2ClientEnt
 
     @Modifying
     @Query("UPDATE OAuth2ClientEntity o SET o.refreshToken = :refreshToken, o.refreshTokenIssuedAt = :refreshTokenIssuedAt, o.deletedAt = :deletedAt WHERE o.id = :id")
-    void updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate);
+    OAuth2ClientEntity updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate);
 }
