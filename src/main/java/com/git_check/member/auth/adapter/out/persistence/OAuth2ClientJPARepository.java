@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 
 @Repository
 public interface OAuth2ClientJPARepository extends JpaRepository<OAuth2ClientEntity, Long> {
-    Optional<OAuth2ClientEntity> findByProviderAndProviderId(String provider, String providerId);
+    Optional<OAuth2ClientEntity> findByProviderAndPrincipalName(String provider, String principalName);
 
     @Modifying
     @Query("UPDATE OAuth2ClientEntity o SET o.refreshToken = :refreshToken, o.refreshTokenIssuedAt = :refreshTokenIssuedAt, o.deletedAt = :deletedAt WHERE o.id = :id")

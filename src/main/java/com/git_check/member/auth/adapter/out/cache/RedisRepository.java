@@ -16,7 +16,18 @@ public class RedisRepository implements CachePort {
     }
 
     @Override
+    public void save(String key, Object value) {
+        if (hasKey(key)) {
+            remove(key);
+        }
+        redisTemplate.opsForValue().set(key, value);
+    }
+
+    @Override
     public void save(String key, Object value, long expirationTimeMillis) {
+        if (hasKey(key)) {
+            remove(key);
+        }
         redisTemplate.opsForValue().set(key, value, Duration.ofMillis(expirationTimeMillis));
     }
 
