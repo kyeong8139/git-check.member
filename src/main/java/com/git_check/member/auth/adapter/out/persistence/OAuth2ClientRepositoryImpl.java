@@ -4,12 +4,11 @@ import org.springframework.stereotype.Repository;
 
 import com.git_check.member.auth.application.domain.OAuth2Client;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientCreate;
-import com.git_check.member.auth.application.domain.dto.OAuth2ClientDelete;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
-import com.git_check.member.auth.application.port.out.SaveOAuth2Client;
+import com.git_check.member.auth.application.port.out.OAuth2ClientPort;
 
 @Repository
-public class OAuth2ClientRepositoryImpl implements SaveOAuth2Client {
+public class OAuth2ClientRepositoryImpl implements OAuth2ClientPort {
     private final OAuth2ClientJPARepository oAuth2ClientJPARepository;
 
     public OAuth2ClientRepositoryImpl(OAuth2ClientJPARepository oAuth2ClientJPARepository) {
@@ -24,17 +23,14 @@ public class OAuth2ClientRepositoryImpl implements SaveOAuth2Client {
     }
 
     @Override
-    public void create(OAuth2ClientCreate oAuth2ClientCreate) {
-        oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientCreate));
+    public OAuth2Client create(OAuth2ClientCreate oAuth2ClientCreate) {
+        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientCreate));
+        return oAuth2ClientEntity.toModel();
     }
 
     @Override
-    public void update(OAuth2ClientUpdate oAuth2ClientUpdate) {
-        oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientUpdate));
-    }
-
-    @Override
-    public void delete(OAuth2ClientDelete oAuth2ClientDelete) {
-        oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientDelete));
+    public OAuth2Client updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
+        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
+        return oAuth2ClientEntity.toModel();
     }
 }

@@ -5,13 +5,13 @@ import java.time.Duration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
-import com.git_check.member.auth.application.port.out.LoadToken;
+import com.git_check.member.auth.application.port.out.CachePort;
 
 @Service
-public class RedisTokenRepository implements LoadToken {
+public class RedisRepository implements CachePort {
 
     private final RedisTemplate<String, Object> redisTemplate;
-    public RedisTokenRepository(RedisTemplate<String, Object> redisTemplate) {
+    public RedisRepository(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 

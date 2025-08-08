@@ -4,7 +4,6 @@ import java.time.Instant;
 
 import com.git_check.member.auth.application.domain.OAuth2Client;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientCreate;
-import com.git_check.member.auth.application.domain.dto.OAuth2ClientDelete;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
 
 import jakarta.persistence.Column;
@@ -76,14 +75,6 @@ public class OAuth2ClientEntity {
         oAuth2ClientEntity.setRefreshToken(oAuth2ClientUpdate.getRefreshToken());
         oAuth2ClientEntity.setRefreshTokenIssuedAt(oAuth2ClientUpdate.getRefreshTokenIssuedAt());
         oAuth2ClientEntity.setDeletedAt(oAuth2ClientUpdate.getDeletedAt());
-        return oAuth2ClientEntity;
-    }
-
-    public static OAuth2ClientEntity from(OAuth2ClientDelete oAuth2ClientDelete) {
-        OAuth2ClientEntity oAuth2ClientEntity = new OAuth2ClientEntity();
-        oAuth2ClientEntity.setRefreshToken(oAuth2ClientDelete.getRefreshToken());
-        oAuth2ClientEntity.setRefreshTokenIssuedAt(oAuth2ClientDelete.getRefreshTokenIssuedAt());
-        oAuth2ClientEntity.setDeletedAt(oAuth2ClientDelete.getDeletedAt());
         return oAuth2ClientEntity;
     }
 

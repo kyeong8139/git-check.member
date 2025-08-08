@@ -15,24 +15,26 @@ import org.springframework.transaction.annotation.Transactional;
 import com.git_check.member.auth.adapter.config.exception.InvalidOAuth2ProviderException;
 import com.git_check.member.auth.application.domain.OAuth2Client;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientCreate;
-import com.git_check.member.auth.application.domain.dto.OAuth2ClientDelete;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
-import com.git_check.member.auth.application.port.out.SaveOAuth2Client;
-import com.git_check.member.auth.application.port.out.LoadToken;
+import com.git_check.member.auth.application.port.out.OAuth2ClientPort;
+import com.git_check.member.auth.application.port.out.CachePort;
+
+import lombok.Builder;
 
 @Service
 @Transactional
 public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClientService {
 
     private final ClientRegistrationRepository clientRegistrationRepository;
-    private final SaveOAuth2Client oAuth2ClientRepository;
-    private final LoadToken tokenRepository;  
+    private final OAuth2ClientPort oAuth2ClientPort;
+    private final CachePort cachePort;  
     private final String REDIS_KEY_PREFIX = "oauth2:access_token:";
 
-    public HybridOAuth2AuthorizedClientService(ClientRegistrationRepository clientRegistrationRepository, LoadToken tokenRepository, SaveOAuth2Client oAuth2ClientRepository) {
+    @Builder
+    public HybridOAuth2AuthorizedClientService(ClientRegistrationRepository clientRegistrationRepository, CachePort cachePort, OAuth2ClientPort oAuth2ClientPort) {
         this.clientRegistrationRepository = clientRegistrationRepository;   
-        this.oAuth2ClientRepository = oAuth2ClientRepository;
-        this.tokenRepository = tokenRepository;
+        this.oAuth2ClientPort = oAuth2ClientPort;
+        this.cachePort = cachePort;
     }
 
     @Override
@@ -42,13 +44,13 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
             throw new InvalidOAuth2ProviderException();
         }
 
-        OAuth2Client oAuth2Client = oAuth2ClientRepository.findByProviderAndProviderId(clientRegistrationId, principalName);
+        OAuth2Client oAuth2Client = oAuth2ClientPort.findByProviderAndProviderId(clientRegistrationId, principalName);
         if (oAuth2Client == null || oAuth2Client.getDeletedAt() != null) {
             return null;
         }
         
         String redisKey = generateRedisKey(clientRegistrationId, principalName);
-        OAuth2AccessToken accessToken = (OAuth2AccessToken) tokenRepository.get(redisKey);
+        OAuth2AccessToken accessToken = (OAuth2AccessToken) cachePort.get(redisKey);
         OAuth2RefreshToken refreshToken = new OAuth2RefreshToken(oAuth2Client.getRefreshToken(), Instant.ofEpochMilli(oAuth2Client.getCreatedAt()));
         return (T) new OAuth2AuthorizedClient(clientRegistration, principalName, accessToken, refreshToken);
     }
@@ -60,7 +62,7 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
         OAuth2AccessToken accessToken = authorizedClient.getAccessToken();
         OAuth2RefreshToken refreshToken = authorizedClient.getRefreshToken();
         
-        OAuth2Client oAuth2Client = oAuth2ClientRepository.findByProviderAndProviderId(registrationId, principalName);
+        OAuth2Client oAuth2Client = oAuth2ClientPort.findByProviderAndProviderId(registrationId, principalName);
         if (oAuth2Client == null) {
             OAuth2ClientCreate oAuth2ClientCreate = OAuth2ClientCreate.builder()
                 .provider(registrationId)
@@ -68,33 +70,33 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
                 .refreshToken(refreshToken.getTokenValue())
                 .refreshTokenIssuedAt(refreshToken.getIssuedAt().toEpochMilli())
                 .build();
-            oAuth2ClientRepository.create(oAuth2ClientCreate);
+            oAuth2ClientPort.create(oAuth2ClientCreate);
         } else if (refreshToken != null) {
             OAuth2ClientUpdate oAuth2ClientUpdata = OAuth2ClientUpdate.builder()
                 .refreshToken(refreshToken.getTokenValue())
                 .refreshTokenIssuedAt(refreshToken.getIssuedAt().toEpochMilli())
                 .deletedAt(null)
                 .build();
-            oAuth2ClientRepository.update(oAuth2ClientUpdata);
+            oAuth2ClientPort.updateState(oAuth2Client.getId(), oAuth2ClientUpdata);
         }
 
-        tokenRepository.save(generateRedisKey(registrationId, principalName), accessToken, accessToken.getExpiresAt().toEpochMilli());
+        cachePort.save(generateRedisKey(registrationId, principalName), accessToken, accessToken.getExpiresAt().toEpochMilli());
     }
 
     @Override
     public void removeAuthorizedClient(String clientRegistrationId, String principalName) {
-        OAuth2Client oAuth2Client = oAuth2ClientRepository.findByProviderAndProviderId(clientRegistrationId, principalName);
+        OAuth2Client oAuth2Client = oAuth2ClientPort.findByProviderAndProviderId(clientRegistrationId, principalName);
         if (oAuth2Client == null) {
             return;
         }
 
-        OAuth2ClientDelete oAuth2ClientDelete = OAuth2ClientDelete.builder()
-            .refreshToken(oAuth2Client.getRefreshToken())
-            .refreshTokenIssuedAt(oAuth2Client.getRefreshTokenIssuedAt())
-            .deletedAt(Instant.now().toEpochMilli())
+        OAuth2ClientUpdate oAuth2ClientUpdate = OAuth2ClientUpdate.builder()
+            .refreshToken(null)
+            .refreshTokenIssuedAt(null)
+            .deletedAt(System.currentTimeMillis())
             .build();
-        oAuth2ClientRepository.delete(oAuth2ClientDelete);
-        tokenRepository.remove(generateRedisKey(clientRegistrationId, principalName));
+        oAuth2ClientPort.updateState(oAuth2Client.getId(), oAuth2ClientUpdate);
+        cachePort.remove(generateRedisKey(clientRegistrationId, principalName));
     }
 
     private String generateRedisKey(String clientRegistrationId, String principalName) {

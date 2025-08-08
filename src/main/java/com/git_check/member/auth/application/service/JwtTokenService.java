@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.git_check.member.auth.application.domain.OidcPrincipal;
 import com.git_check.member.auth.application.port.in.ProvideJwtToken;
-import com.git_check.member.auth.application.port.out.LoadToken;
+import com.git_check.member.auth.application.port.out.CachePort;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -20,14 +20,14 @@ public class JwtTokenService implements ProvideJwtToken{
     private final int REFRESH_TOKEN_EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 7;
     private final SecretKey accessTokenSecretKey;
     private final SecretKey refreshTokenSecretKey;
-    private final LoadToken redisService;
+    private final CachePort cachePort;
 
     public JwtTokenService(
             @Value("${jwt.access-token-secret}") String accessSecret,
             @Value("${jwt.refresh-token-secret}") String refreshSecret,
-            LoadToken redisService
+            CachePort cachePort
     ) {
-        this.redisService = redisService;
+        this.cachePort = cachePort;
         this.accessTokenSecretKey = Keys.hmacShaKeyFor(accessSecret.getBytes(StandardCharsets.UTF_8));
         this.refreshTokenSecretKey = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
     }
@@ -44,7 +44,7 @@ public class JwtTokenService implements ProvideJwtToken{
         .compact();
 
         String redisKey = generateAccessTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
-        redisService.save(redisKey, accessToken, expirationDate.getTime());
+        cachePort.save(redisKey, accessToken, expirationDate.getTime());
         return accessToken;
     }
 
@@ -59,7 +59,7 @@ public class JwtTokenService implements ProvideJwtToken{
         .compact();
 
         String redisKey = generateRefreshTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
-        redisService.save(redisKey, refreshToken, expirationDate.getTime());
+        cachePort.save(redisKey, refreshToken, expirationDate.getTime());
         return refreshToken;    
     }
 
@@ -67,8 +67,8 @@ public class JwtTokenService implements ProvideJwtToken{
     public void expireAllToken(OidcPrincipal OidcPrincipal) {
         String refreshTokenKey = generateRefreshTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
         String accessTokenKey = generateAccessTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
-        redisService.remove(refreshTokenKey);
-        redisService.remove(accessTokenKey);
+        cachePort.remove(refreshTokenKey);
+        cachePort.remove(accessTokenKey);
     }
 
     private String generateRefreshTokenKey(String memberId) {
