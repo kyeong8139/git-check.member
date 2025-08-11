@@ -5,18 +5,28 @@ import com.git_check.member.auth.application.domain.dto.OAuth2ClientCreate;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
 import com.git_check.member.auth.application.port.out.OAuth2ClientPort;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 
 public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
 
     private Map<Long, OAuth2Client> oAuth2ClientRepository = new HashMap<>();
-    private Map<Long, List<String>> oAuth2ClientAccessTokenRepository = new HashMap<>();
+    private Map<Long, List<OAuth2AccessToken>> oAuth2ClientAccessTokenRepository = new HashMap<>();
     private long id = 0;
+    private long currentTimeMills;
+    private long futureTimeMills;
+    private int getTokenCount = 0;
+
+    public FakeOAuth2ClientAdapter(long currentTimeMills) {
+        this.currentTimeMills = currentTimeMills;
+        this.futureTimeMills = currentTimeMills * 2;
+    }
 
     @Override
     public OAuth2Client findByProviderAndPrincipalName(String provider, String principalName) {
@@ -39,7 +49,7 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
             .build();
         oAuth2ClientRepository.put(id, oAuth2Client);
         oAuth2ClientAccessTokenRepository.put(id, new ArrayList<>());
-        oAuth2ClientAccessTokenRepository.get(id).add(oAuth2ClientCreate.getAccessToken().getTokenValue());
+        oAuth2ClientAccessTokenRepository.get(id).add(oAuth2ClientCreate.getAccessToken());
         return oAuth2ClientRepository.get(id++);
     }
 
@@ -57,6 +67,12 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
         return oAuth2ClientRepository.get(id);
     }
 
+    @Override
+    public OAuth2AccessToken findLastAccessTokenByProviderAndPrincipalName(long clientId) {
+        getTokenCount++;
+        return oAuth2ClientAccessTokenRepository.get(clientId).get(oAuth2ClientAccessTokenRepository.get(clientId).size() - 1);
+    }
+    
     public OAuth2Client createSoftDeletedClient(String provider, String principalName) {
         OAuth2Client oAuth2Client = OAuth2Client.builder()
             .id(id)
@@ -64,15 +80,39 @@ public class FakeOAuth2ClientAdapter implements OAuth2ClientPort {
             .principalName(principalName)
             .accessToken(null)
             .refreshToken(null)
-            .deletedAt(System.currentTimeMillis())
+            .deletedAt(currentTimeMills)
             .build();
         oAuth2ClientRepository.put(id, oAuth2Client);
         return oAuth2ClientRepository.get(id++);
     }
 
-    @Override
-    public OAuth2AccessToken findLastAccessTokenByProviderAndPrincipalName(long clientId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'findLastAccessTokenByProviderAndPrincipalName'");
+    public OAuth2Client createActiveUser(String clientRegistrationId, String principalName) {
+        OAuth2AccessToken oAuth2AccessToken = new OAuth2AccessToken(
+            OAuth2AccessToken.TokenType.BEARER, 
+            "DUMMY_TOKEN", 
+            Instant.ofEpochMilli(currentTimeMills),  
+            Instant.ofEpochMilli(futureTimeMills));
+
+        OAuth2RefreshToken oAuth2RefreshToken = new OAuth2RefreshToken(
+            "DUMMY_REFRESH_TOKEN",
+            Instant.ofEpochMilli(currentTimeMills),
+            Instant.ofEpochMilli(futureTimeMills));
+
+        OAuth2Client oAuth2Client = OAuth2Client.builder()
+            .id(id)
+            .provider(clientRegistrationId)
+            .principalName(principalName)
+            .accessToken(oAuth2AccessToken)
+            .refreshToken(oAuth2RefreshToken)
+            .deletedAt(null)
+            .build();
+        oAuth2ClientRepository.put(id, oAuth2Client);
+        oAuth2ClientAccessTokenRepository.put(id, new ArrayList<>());
+        oAuth2ClientAccessTokenRepository.get(id).add(oAuth2AccessToken);
+        return oAuth2ClientRepository.get(id++);
+    }
+
+    public int getTokenCount() {
+        return getTokenCount;
     }
 }
