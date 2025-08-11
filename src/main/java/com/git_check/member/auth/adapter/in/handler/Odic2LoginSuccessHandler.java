@@ -17,14 +17,14 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.git_check.member.auth.application.domain.OidcPrincipal;
-import com.git_check.member.auth.application.port.in.ProvideJwtToken;
+import com.git_check.member.auth.application.port.in.JwtTokenPort;
 
 @Component
 public class Odic2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final ProvideJwtToken jwtService;
+    private final JwtTokenPort jwtService;
 
-    public Odic2LoginSuccessHandler(ProvideJwtToken jwtService) {
+    public Odic2LoginSuccessHandler(JwtTokenPort jwtService) {
         this.jwtService = jwtService;
     }
 

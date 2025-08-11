@@ -8,26 +8,26 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.git_check.member.auth.application.domain.OidcPrincipal;
-import com.git_check.member.auth.application.port.in.ProvideJwtToken;
-import com.git_check.member.auth.application.port.out.CachePort;
+import com.git_check.member.auth.application.domain.dto.JwtToken;
+import com.git_check.member.auth.application.port.in.JwtTokenPort;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 @Service
-public class JwtTokenService implements ProvideJwtToken{
+public class JwtTokenService implements JwtTokenPort{
     private final int ACCESS_TOKEN_EXPIRATION_TIME = 1000 * 60 * 60 * 24;
     private final int REFRESH_TOKEN_EXPIRATION_TIME = 1000 * 60 * 60 * 24 * 7;
     private final SecretKey accessTokenSecretKey;
     private final SecretKey refreshTokenSecretKey;
-    private final CachePort cachePort;
 
     public JwtTokenService(
             @Value("${jwt.access-token-secret}") String accessSecret,
-            @Value("${jwt.refresh-token-secret}") String refreshSecret,
-            CachePort cachePort
+            @Value("${jwt.refresh-token-secret}") String refreshSecret
     ) {
-        this.cachePort = cachePort;
         this.accessTokenSecretKey = Keys.hmacShaKeyFor(accessSecret.getBytes(StandardCharsets.UTF_8));
         this.refreshTokenSecretKey = Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
     }
@@ -36,46 +36,70 @@ public class JwtTokenService implements ProvideJwtToken{
     public String createAccessToken(OidcPrincipal OidcPrincipal) {
         java.util.Date expirationDate = new java.util.Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME);
         String accessToken = Jwts.builder()
-            .subject(String.valueOf(OidcPrincipal.getMemberId()))
+            .claim("id",OidcPrincipal.getMemberId())
             .claim("name", OidcPrincipal.getMemberName())
             .issuedAt(new java.util.Date())
             .expiration(expirationDate)
             .signWith(accessTokenSecretKey)
         .compact();
 
-        String redisKey = generateAccessTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
-        cachePort.save(redisKey, accessToken, expirationDate.getTime());
         return accessToken;
     }
 
     @Override
     public String createRefreshToken(OidcPrincipal OidcPrincipal) {
-        java.util.Date expirationDate = new java.util.Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME);
+        java.util.Date now = new java.util.Date();
+        java.util.Date expirationDate = new java.util.Date(now.getTime() + REFRESH_TOKEN_EXPIRATION_TIME);
         String refreshToken = Jwts.builder()
-            .subject(String.valueOf(OidcPrincipal.getMemberId()))
-            .issuedAt(new java.util.Date())
-            .expiration(new java.util.Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
+            .claim("id",OidcPrincipal.getMemberId())
+            .claim("name", OidcPrincipal.getMemberName())
+            .issuedAt(now)
+            .expiration(expirationDate)
             .signWith(refreshTokenSecretKey)
         .compact();
 
-        String redisKey = generateRefreshTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
-        cachePort.save(redisKey, refreshToken, expirationDate.getTime());
         return refreshToken;    
     }
 
     @Override
-    public void expireAllToken(OidcPrincipal OidcPrincipal) {
-        String refreshTokenKey = generateRefreshTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
-        String accessTokenKey = generateAccessTokenKey(String.valueOf(OidcPrincipal.getMemberId()));
-        cachePort.remove(refreshTokenKey);
-        cachePort.remove(accessTokenKey);
-    }
+    public JwtToken reissueToken(String refreshToken) {
+        Claims claims = null;
+        try {
+            claims = Jwts.parser()
+                .verifyWith(refreshTokenSecretKey)
+                .build()
+                .parseSignedClaims(refreshToken)
+                .getPayload();            
+        } catch(ExpiredJwtException | SignatureException e) {
+            return null;
+        }
 
-    private String generateRefreshTokenKey(String memberId) {
-        return "jwt:refresh_token:" + memberId;
-    }
+        long id = claims.get("id", Long.class);
+        String name = claims.get("name", String.class);
+        
+        java.util.Date now = new java.util.Date();
+        java.util.Date accessTokenExpirationDate = new java.util.Date(now.getTime() + ACCESS_TOKEN_EXPIRATION_TIME);
+        java.util.Date refreshTokenExpirationDate = new java.util.Date(now.getTime() + REFRESH_TOKEN_EXPIRATION_TIME);
+        
+        String newAccessToken = Jwts.builder()
+            .claim("id", id)
+            .claim("name", name) 
+            .issuedAt(now)
+            .expiration(accessTokenExpirationDate)
+            .signWith(accessTokenSecretKey)
+            .compact();
 
-    private String generateAccessTokenKey(String memberId) {
-        return "jwt:access_token:" + memberId;
+        String newRefreshToken = Jwts.builder()
+            .claim("id", id)
+            .claim("name", name)
+            .issuedAt(now)
+            .expiration(refreshTokenExpirationDate)
+            .signWith(refreshTokenSecretKey)
+            .compact();
+
+        return JwtToken.builder()
+            .accessToken(newAccessToken)
+            .refreshToken(newRefreshToken)
+            .build();
     }
 }            
