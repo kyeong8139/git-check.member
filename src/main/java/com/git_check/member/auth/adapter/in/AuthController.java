@@ -31,7 +31,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
+    public ResponseEntity<String> logout(@RequestHeader("accessToken") String accessToken) {
+        jwtTokenPort.logout(accessToken);
         ResponseCookie expiredRefresh = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true).secure(true)
                 .path("/").maxAge(0).build();

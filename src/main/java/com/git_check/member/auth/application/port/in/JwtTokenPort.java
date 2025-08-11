@@ -8,4 +8,5 @@ public interface JwtTokenPort {
     public String createRefreshToken(OidcPrincipal OidcPrincipal);
 
     public JwtToken reissueToken(String refreshToken);
+    public void logout(String accessToken);
 }
