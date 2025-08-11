@@ -10,7 +10,7 @@ import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.git_check.member.auth.adapter.config.exception.InvalidOAuth2ProviderException;
+import com.git_check.member.auth.adapter.exception.InvalidOAuth2ProviderException;
 import com.git_check.member.auth.application.domain.OAuth2Client;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientCreate;
 import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;

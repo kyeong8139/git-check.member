@@ -1,11 +1,10 @@
-package com.git_check.member.auth.adapter.config.handler;
+package com.git_check.member.auth.adapter.in.handler;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -16,16 +15,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.git_check.member.auth.application.domain.OidcPrincipal;
-import com.git_check.member.auth.application.port.in.ProvideJwtToken;
+import com.git_check.member.auth.application.port.in.JwtTokenPort;
 
 @Component
 public class Odic2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
-    private final ProvideJwtToken jwtService;
+    private final JwtTokenPort jwtService;
 
-    public Odic2LoginSuccessHandler(ProvideJwtToken jwtService) {
+    public Odic2LoginSuccessHandler(JwtTokenPort jwtService) {
         this.jwtService = jwtService;
     }
 
@@ -38,9 +36,16 @@ public class Odic2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 
         ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", refreshToken)
         .httpOnly(true)
-        .secure(true)       
+        // .secure(true)    
         .path("/")
-        .maxAge(Duration.ofDays(14))
+        .maxAge(Duration.ofDays(7))
+        .build();
+
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", accessToken)
+        .httpOnly(true)
+        // .secure(true)       
+        .path("/")
+        .maxAge(Duration.ofMinutes(10))
         .build();
 
         response.setStatus(HttpStatus.OK.value());
@@ -48,6 +53,6 @@ public class Odic2LoginSuccessHandler implements AuthenticationSuccessHandler {
         response.setHeader("Pragma", "no-cache");
         response.setContentType("application/json;charset=UTF-8");
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
-        new ObjectMapper().writeValue(response.getWriter(), Map.of("accessToken", accessToken));
+        response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
     }
 }
