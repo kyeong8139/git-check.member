@@ -33,10 +33,10 @@ public class OAuth2ClientRepositoryAdapter implements OAuth2ClientPort {
     }
 
     @Override
-    public OAuth2Client updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
-        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
+    public void updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate) {
+        oAuth2ClientJPARepository.updateState(id, oAuth2ClientUpdate);
+        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.findById(id);
         clientAccessTokenHistoryJPARepository.save(ClientAccessTokenEntity.from(oAuth2ClientUpdate.getAccessToken(), oAuth2ClientEntity));
-        return oAuth2ClientEntity.toModel();
     }
 
     @Override

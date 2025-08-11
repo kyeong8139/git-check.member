@@ -9,6 +9,6 @@ import com.git_check.member.auth.application.domain.dto.OAuth2ClientUpdate;
 public interface OAuth2ClientPort {
     OAuth2Client findByProviderAndPrincipalName(String provider, String principalName);
     OAuth2Client create(OAuth2ClientCreate oAuth2ClientCreate);
-    OAuth2Client updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdata);
+    void updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdata);
     OAuth2AccessToken findLastAccessTokenByProviderAndPrincipalName(long clientId);
 }   

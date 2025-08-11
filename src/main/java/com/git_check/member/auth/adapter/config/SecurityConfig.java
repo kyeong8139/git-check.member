@@ -6,8 +6,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;    
 
@@ -17,13 +17,13 @@ public class SecurityConfig {
 
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final OAuth2AuthorizationRequestResolver authorizationRequestResolver;
-    private final OidcUserService oidcUserService;
+    private final OAuth2UserService oidcUserService;
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final AuthenticationFailureHandler authenticationFailureHandler;
     
     public SecurityConfig(OAuth2AuthorizedClientService oAuth2AuthorizedClientService, 
                          OAuth2AuthorizationRequestResolver authorizationRequestResolver,
-                         OidcUserService oidcUserService,
+                         OAuth2UserService oidcUserService,
                          AuthenticationSuccessHandler authenticationSuccessHandler,
                          AuthenticationFailureHandler authenticationFailureHandler) {
         this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
@@ -44,7 +44,7 @@ public class SecurityConfig {
             .authorizedClientService(this.oAuth2AuthorizedClientService)
             .authorizationEndpoint(authorization -> authorization
                 .authorizationRequestResolver(authorizationRequestResolver))
-            .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oidcUserService))
+            .userInfoEndpoint(userInfo -> userInfo.userService(oidcUserService))
             .successHandler(authenticationSuccessHandler)
             .failureHandler(authenticationFailureHandler)
         );
