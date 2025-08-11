@@ -1,7 +1,9 @@
 package com.git_check.member.auth.adapter.in;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,5 +28,16 @@ public class AuthController {
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(jwtToken.getAccessToken());
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+        ResponseCookie expiredRefresh = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true).secure(true)
+                .path("/").maxAge(0).build();
+
+        return ResponseEntity.noContent()
+            .header(HttpHeaders.SET_COOKIE, expiredRefresh.toString())
+            .build();
     }
 }
