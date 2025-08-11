@@ -2,6 +2,7 @@ package com.git_check.member.auth.service.HybridOAuth2AuthorizedClientService;
 
 import org.junit.jupiter.api.BeforeEach;
 
+import com.git_check.member.auth.application.domain.OAuth2Client;
 import com.git_check.member.auth.application.service.HybridOAuth2AuthorizedClientService;
 import com.git_check.member.auth.mock.FakeCacheAdapter;
 import com.git_check.member.auth.mock.FakeClientRegistrationAdapter;
@@ -10,6 +11,7 @@ import com.git_check.member.auth.adapter.config.exception.InvalidOAuth2ProviderE
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
@@ -22,9 +24,7 @@ public class LoadAuthorizedClientTest {
     private FakeOAuth2ClientAdapter fakeOAuth2ClientAdapter;
     private FakeCacheAdapter fakeCacheAdapter;
 
-    private long pastTimeMills = 10_0000_0000L;
     private long currentTimeMills = 100_0000_0000L;
-    private long futureTimeMills = 1000_0000_0000L;
     private String REDIS_KEY_PREFIX = "oauth2:access_token:";
     private String clientRegistrationId = "google";
 
@@ -32,7 +32,7 @@ public class LoadAuthorizedClientTest {
     void init() {
         this.fakeCacheAdapter = new FakeCacheAdapter(currentTimeMills);
         this.fakeClientRegistrationAdapter = new FakeClientRegistrationAdapter(clientRegistrationId);
-        this.fakeOAuth2ClientAdapter = new FakeOAuth2ClientAdapter();
+        this.fakeOAuth2ClientAdapter = new FakeOAuth2ClientAdapter(currentTimeMills);
         this.hybridOAuth2AuthorizedClientService = HybridOAuth2AuthorizedClientService.builder()
             .clientRegistrationRepository(fakeClientRegistrationAdapter)
             .cachePort(fakeCacheAdapter)
@@ -80,21 +80,41 @@ public class LoadAuthorizedClientTest {
         assertNull(authorizedClient);
     }
 
-    void loadAuthorizedClient_whenAccessTokenCached_returnsAuthorizedClientWithTokens(){}
+    @Test
+    void loadAuthorizedClient_whenAccessTokenCached_returnsAuthorizedClientWithCachedAccessTokens(){
+        //given
+        String principalName = "1234567890";
+        OAuth2Client client = fakeOAuth2ClientAdapter.createActiveUser(clientRegistrationId, principalName);
+        String cacheKey = REDIS_KEY_PREFIX + clientRegistrationId + ":" + principalName;
+        fakeCacheAdapter.save(cacheKey, client.getAccessToken());
 
-    void loadAuthorizedClient_whenAccessTokenMissing_returnsAuthorizedClientWithNullAccessToken(){}
+        // when
+        OAuth2AuthorizedClient authorizedClient = hybridOAuth2AuthorizedClientService.loadAuthorizedClient(clientRegistrationId, principalName);
 
-    void loadAuthorizedClient_whenCachedAccessTokenExpired_behavesAsMissingAccessToken(){}
+        // then
+        assertEquals(0, fakeOAuth2ClientAdapter.getTokenCount());
+        assertEquals(1, fakeCacheAdapter.getTokenCount());
+        assertEquals(client.getAccessToken().getTokenType(), authorizedClient.getAccessToken().getTokenType());
+        assertEquals(client.getAccessToken().getTokenValue(), authorizedClient.getAccessToken().getTokenValue());
+        assertEquals(client.getAccessToken().getIssuedAt(), authorizedClient.getAccessToken().getIssuedAt());
+        assertEquals(client.getAccessToken().getExpiresAt(), authorizedClient.getAccessToken().getExpiresAt());
+    }
 
-    void loadAuthorizedClient_usesCorrectRedisKeyFormat(){}
+    @Test
+    void loadAuthorizedClient_whenAccessTokenMissing_returnsAuthorizedClientWithTokens(){
+        String principalName = "1234567890";
+        OAuth2Client client = fakeOAuth2ClientAdapter.createActiveUser(clientRegistrationId, principalName);
 
-    void loadAuthorizedClient_setsRefreshTokenFromDomainAndIssuedAtFromCreatedAt(){}
+        // when
+        OAuth2AuthorizedClient authorizedClient = hybridOAuth2AuthorizedClientService.loadAuthorizedClient(clientRegistrationId, principalName);
 
-    void loadAuthorizedClient_whenCachedValueHasWrongType_propagatesClassCastException(){}
-
-    void loadAuthorizedClient_whenOAuth2ClientRefreshTokenNull_propagatesException(){}
-
-    void loadAuthorizedClient_whenClientRegistrationInvalid_doesNotCallOAuth2ClientPort(){}
-
-    void loadAuthorizedClient_returnsClientBoundToGivenRegistrationAndPrincipal(){}
+        // then
+        assertEquals(0, fakeCacheAdapter.getTokenCount());
+        assertEquals(1, fakeOAuth2ClientAdapter.getTokenCount());
+        assertEquals(client.getAccessToken().getTokenType(), authorizedClient.getAccessToken().getTokenType());
+        assertEquals(client.getAccessToken().getTokenValue(), authorizedClient.getAccessToken().getTokenValue());
+        assertEquals(client.getAccessToken().getIssuedAt(), authorizedClient.getAccessToken().getIssuedAt());
+        assertEquals(client.getAccessToken().getExpiresAt(), authorizedClient.getAccessToken().getExpiresAt());
+    
+    }
 }

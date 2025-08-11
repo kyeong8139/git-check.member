@@ -9,6 +9,7 @@ public class FakeCacheAdapter implements CachePort {
 
     private Map<String, MockCacheEntry> cacheRepository = new HashMap<>();
     private long currentTimeMills;
+    private int getTokenCount = 0;
 
     public FakeCacheAdapter(long currentTimeMills) {
         this.currentTimeMills = currentTimeMills;
@@ -34,6 +35,7 @@ public class FakeCacheAdapter implements CachePort {
     public Object get(String key) {
         MockCacheEntry mockCacheEntry = cacheRepository.get(key);
         if (isExist(mockCacheEntry)) {
+            getTokenCount++;
             return mockCacheEntry.getValue();
         }
         return null;
@@ -52,5 +54,9 @@ public class FakeCacheAdapter implements CachePort {
 
     private boolean isExist(MockCacheEntry mockCacheEntry) {
         return mockCacheEntry != null && mockCacheEntry.getExpiresAt() > currentTimeMills;
+    }
+
+    public int getTokenCount() {
+        return getTokenCount;
     }
 }
