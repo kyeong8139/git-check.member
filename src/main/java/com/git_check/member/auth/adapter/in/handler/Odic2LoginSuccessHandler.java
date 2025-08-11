@@ -1,11 +1,10 @@
-package com.git_check.member.auth.adapter.config.handler;
+package com.git_check.member.auth.adapter.in.handler;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

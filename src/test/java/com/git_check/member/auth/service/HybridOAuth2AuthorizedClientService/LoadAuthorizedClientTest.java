@@ -2,12 +2,13 @@ package com.git_check.member.auth.service.HybridOAuth2AuthorizedClientService;
 
 import org.junit.jupiter.api.BeforeEach;
 
+import com.git_check.member.auth.adapter.exception.InvalidOAuth2ProviderException;
 import com.git_check.member.auth.application.domain.OAuth2Client;
 import com.git_check.member.auth.application.service.HybridOAuth2AuthorizedClientService;
 import com.git_check.member.auth.mock.FakeCacheAdapter;
 import com.git_check.member.auth.mock.FakeClientRegistrationAdapter;
 import com.git_check.member.auth.mock.FakeOAuth2ClientAdapter;
-import com.git_check.member.auth.adapter.config.exception.InvalidOAuth2ProviderException;
+
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertThrows;

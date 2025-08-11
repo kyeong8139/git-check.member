@@ -1,4 +1,4 @@
-package com.git_check.member.auth.adapter.config;
+package com.git_check.member.auth.adapter.out.cache;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
