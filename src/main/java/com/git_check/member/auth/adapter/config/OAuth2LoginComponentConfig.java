@@ -21,7 +21,8 @@ public class OAuth2LoginComponentConfig {
             new DefaultOAuth2AuthorizationRequestResolver(clientRegistrationRepository, "/oauth2/authorization");
         authorizationRequestResolver.setAuthorizationRequestCustomizer(
             costomizer -> costomizer.additionalParameters(params -> {
-                params.put("prompt", "select_account");
+                params.put("access_type", "offline");
+                params.put("prompt", "consent");
             }));
 
         return authorizationRequestResolver;

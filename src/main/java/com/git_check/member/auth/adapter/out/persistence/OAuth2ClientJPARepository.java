@@ -15,7 +15,7 @@ public interface OAuth2ClientJPARepository extends JpaRepository<OAuth2ClientEnt
     Optional<OAuth2ClientEntity> findByProviderAndPrincipalName(String provider, String principalName);
 
     @Modifying
-    @Query("UPDATE OAuth2ClientEntity o SET o.refreshTokenValue = :refreshTokenValue, o.refreshTokenIssuedAt = :refreshTokenIssuedAt, o.refreshTokenExpiresAt = :refreshTokenExpiresAt, o.deletedAt = :deletedAt WHERE o.id = :id")
+    @Query("UPDATE OAuth2ClientEntity o SET o.refreshTokenValue = :refreshTokenValue, o.refreshTokenIssuedAt = :refreshTokenIssuedAt, o.deletedAt = :deletedAt WHERE o.id = :id")
     int updateState(long id, OAuth2ClientUpdate oAuth2ClientUpdate);
 
     OAuth2ClientEntity findById(long id);

@@ -44,9 +44,6 @@ public class OAuth2ClientEntity {
     @Column(name = "refresh_token_issued_at", nullable = false)
     private Long refreshTokenIssuedAt;
 
-    @Column(name = "refresh_token_expires_at", nullable = false)
-    private Long refreshTokenExpiresAt;
-
     @Column(name = "created_at")
     private Long createdAt;
 
@@ -56,7 +53,7 @@ public class OAuth2ClientEntity {
     @Column(name = "deleted_at")
     private Long deletedAt;
 
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ClientAccessTokenEntity> accessTokenHistory;
 
     @PrePersist
@@ -76,7 +73,6 @@ public class OAuth2ClientEntity {
         oAuth2ClientEntity.setPrincipalName(oAuth2ClientCreate.getPrincipalName());
         oAuth2ClientEntity.setRefreshTokenValue(oAuth2ClientCreate.getRefreshToken().getTokenValue());
         oAuth2ClientEntity.setRefreshTokenIssuedAt(oAuth2ClientCreate.getRefreshToken().getIssuedAt().toEpochMilli());
-        oAuth2ClientEntity.setRefreshTokenExpiresAt(oAuth2ClientCreate.getRefreshToken().getExpiresAt().toEpochMilli());
         return oAuth2ClientEntity;
     }
 
@@ -84,7 +80,6 @@ public class OAuth2ClientEntity {
         OAuth2ClientEntity oAuth2ClientEntity = new OAuth2ClientEntity();
         oAuth2ClientEntity.setRefreshTokenValue(oAuth2ClientUpdate.getRefreshToken().getTokenValue());
         oAuth2ClientEntity.setRefreshTokenIssuedAt(oAuth2ClientUpdate.getRefreshToken().getIssuedAt().toEpochMilli());
-        oAuth2ClientEntity.setRefreshTokenExpiresAt(oAuth2ClientUpdate.getRefreshToken().getExpiresAt().toEpochMilli());
         oAuth2ClientEntity.setDeletedAt(oAuth2ClientUpdate.getDeletedAt());
         return oAuth2ClientEntity;
     }
@@ -94,7 +89,7 @@ public class OAuth2ClientEntity {
             .id(id)
             .provider(provider)
             .principalName(principalName)
-            .refreshToken(new OAuth2RefreshToken(refreshTokenValue, Instant.ofEpochMilli(refreshTokenIssuedAt), Instant.ofEpochMilli(refreshTokenExpiresAt)))
+            .refreshToken(new OAuth2RefreshToken(refreshTokenValue, Instant.ofEpochMilli(refreshTokenIssuedAt)))
             .createdAt(createdAt)
             .updatedAt(updatedAt)
             .deletedAt(deletedAt)

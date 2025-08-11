@@ -7,6 +7,7 @@ import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -36,7 +37,7 @@ public class ClientAccessTokenEntity {
     @Column(name = "expires_at", nullable = false)
     private Long expiresAt;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "client_id", nullable = false)
     private OAuth2ClientEntity client;
 
@@ -46,6 +47,7 @@ public class ClientAccessTokenEntity {
         clientAccessTokenEntity.setTokenValue(accessToken.getTokenValue());
         clientAccessTokenEntity.setIssuedAt(accessToken.getIssuedAt().toEpochMilli());
         clientAccessTokenEntity.setExpiresAt(accessToken.getExpiresAt().toEpochMilli());
+        clientAccessTokenEntity.setClient(client);
         return clientAccessTokenEntity;
     }
 

@@ -37,7 +37,7 @@ public class JwtTokenService implements ProvideJwtToken{
         java.util.Date expirationDate = new java.util.Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME);
         String accessToken = Jwts.builder()
             .subject(String.valueOf(OidcPrincipal.getMemberId()))
-            .content("name", OidcPrincipal.getMemberName())
+            .claim("name", OidcPrincipal.getMemberName())
             .issuedAt(new java.util.Date())
             .expiration(expirationDate)
             .signWith(accessTokenSecretKey)

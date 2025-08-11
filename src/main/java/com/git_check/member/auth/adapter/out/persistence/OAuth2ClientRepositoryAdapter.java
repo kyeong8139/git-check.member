@@ -27,7 +27,7 @@ public class OAuth2ClientRepositoryAdapter implements OAuth2ClientPort {
 
     @Override
     public OAuth2Client create(OAuth2ClientCreate oAuth2ClientCreate) {
-        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.save(OAuth2ClientEntity.from(oAuth2ClientCreate));
+        OAuth2ClientEntity oAuth2ClientEntity = oAuth2ClientJPARepository.saveAndFlush(OAuth2ClientEntity.from(oAuth2ClientCreate));
         clientAccessTokenHistoryJPARepository.save(ClientAccessTokenEntity.from(oAuth2ClientCreate.getAccessToken(), oAuth2ClientEntity));
         return oAuth2ClientEntity.toModel();
     }

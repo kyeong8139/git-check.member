@@ -77,7 +77,7 @@ public class HybridOAuth2AuthorizedClientService implements OAuth2AuthorizedClie
         } else if (refreshToken != null) {
             OAuth2ClientUpdate oAuth2ClientUpdata = OAuth2ClientUpdate.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken)
+                .refreshToken(oAuth2Client.getRefreshToken())
                 .deletedAt(null)
                 .build();
             oAuth2ClientPort.updateState(oAuth2Client.getId(), oAuth2ClientUpdata);

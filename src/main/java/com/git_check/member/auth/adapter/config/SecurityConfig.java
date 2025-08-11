@@ -8,8 +8,11 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;    
+import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
+
 
 @Configuration
 @EnableWebSecurity
@@ -17,13 +20,13 @@ public class SecurityConfig {
 
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final OAuth2AuthorizationRequestResolver authorizationRequestResolver;
-    private final OAuth2UserService oidcUserService;
+    private final OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService;
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final AuthenticationFailureHandler authenticationFailureHandler;
     
     public SecurityConfig(OAuth2AuthorizedClientService oAuth2AuthorizedClientService, 
                          OAuth2AuthorizationRequestResolver authorizationRequestResolver,
-                         OAuth2UserService oidcUserService,
+                         OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService,
                          AuthenticationSuccessHandler authenticationSuccessHandler,
                          AuthenticationFailureHandler authenticationFailureHandler) {
         this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
@@ -37,14 +40,14 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
         .authorizeHttpRequests(authorize -> authorize
-            .requestMatchers("/oauth2/authorization/**").permitAll()
+            .requestMatchers("/login").permitAll()
             .anyRequest().authenticated());
         
         http.oauth2Login(oauth2 -> oauth2
             .authorizedClientService(this.oAuth2AuthorizedClientService)
             .authorizationEndpoint(authorization -> authorization
                 .authorizationRequestResolver(authorizationRequestResolver))
-            .userInfoEndpoint(userInfo -> userInfo.userService(oidcUserService))
+            .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oidcUserService))
             .successHandler(authenticationSuccessHandler)
             .failureHandler(authenticationFailureHandler)
         );
