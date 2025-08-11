@@ -1,6 +1,9 @@
 package com.git_check.member.auth.adapter.in;
 
 import org.springframework.http.ResponseEntity;
+
+import java.time.Duration;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -27,7 +30,16 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(jwtToken.getAccessToken());
+        ResponseCookie accessCookie = ResponseCookie.from("accessToken", jwtToken.getAccessToken())
+            .httpOnly(true)
+            .secure(true)
+            .path("/")
+            .maxAge(Duration.ofMinutes(10))
+            .build();
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
+            .build();
     }
 
     @PostMapping("/logout")
