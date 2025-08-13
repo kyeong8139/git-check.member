@@ -4,8 +4,6 @@ import org.springframework.stereotype.Service;
 
 import com.git_check.member.auth.application.port.out.MemberAccountPort;
 import com.git_check.member.global.dto.MemberInfo;
-import com.git_check.member.global.dto.MemberRegisterDto;
-import com.git_check.member.member.adapter.out.persistence.JpaMemberRepository;
 import com.git_check.member.member.application.domain.Member;
 import com.git_check.member.member.application.port.out.MemberPersistencePort;
 
@@ -19,23 +17,21 @@ public class MemberAccountService implements MemberAccountPort {
     }
 
     @Override
-    public MemberInfo getMemberInfo(String socialLoginType, String socialLoginId) {
+    public MemberInfo getMemberInfo(String name, String socialLoginType, String socialLoginId) {
         Member member = memberPersistencePort.findMemberBySocialLoginTypeAndSocialLoginId(socialLoginType, socialLoginId);
         if (member == null) {
-            return null;
+            return MemberInfo.from(registerMember(name, socialLoginType, socialLoginId));
         }
 
         return MemberInfo.from(member);
     }
 
-    @Override
-    public MemberInfo registerMember(MemberRegisterDto memberRegisterDto) {
+    private Member registerMember(String name, String socialLoginType, String socialLoginId) {
         Member member = Member.builder()
-            .name(memberRegisterDto.getName())
-            .socialLoginType(memberRegisterDto.getSocialLoginType())
-            .socialLoginId(memberRegisterDto.getSocialLoginId())
+            .name(name)
+            .socialLoginType(socialLoginType)
+            .socialLoginId(socialLoginId)
             .build();
-        Member savedMember = memberPersistencePort.registerMember(member);
-        return MemberInfo.from(savedMember);
+        return memberPersistencePort.registerMember(member);
     }
 }
