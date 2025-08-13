@@ -9,15 +9,15 @@ import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import com.git_check.member.global.dto.MemberInfo;
 import com.git_check.member.global.dto.MemberRegisterDto;
 import com.git_check.member.auth.application.domain.OidcPrincipal;
-import com.git_check.member.auth.application.port.out.LoadMemberInfo;
+import com.git_check.member.auth.application.port.out.MemberAccountPort;
 
 @Service
 public class OidcPrincipalService implements OAuth2UserService<OidcUserRequest, OidcUser> {
 
-    private final LoadMemberInfo memberAccountService;
+    private final MemberAccountPort memberAccountService;
     private final OidcUserService oidcUserService;
     
-    public OidcPrincipalService(LoadMemberInfo memberAccountService) {
+    public OidcPrincipalService(MemberAccountPort memberAccountService) {
         this.memberAccountService = memberAccountService;
         this.oidcUserService = new OidcUserService();
     }   

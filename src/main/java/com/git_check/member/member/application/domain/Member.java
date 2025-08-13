@@ -1,15 +1,16 @@
-package com.git_check.member.global.dto;
+package com.git_check.member.member.application.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
-@Data
 @Builder
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class MemberRegisterDto {
+public class Member {
+    Long id;
     String name;
     String socialLoginType;
     String socialLoginId;
